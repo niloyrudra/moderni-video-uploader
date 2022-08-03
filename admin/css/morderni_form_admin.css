@@ -1,0 +1,66 @@
+#moderni_form_image_button {
+	display:block;
+}
+
+.moderni_form_image_container {
+	position:relative;
+	width:150px;
+	height:150px;
+}
+
+.moderni_form_close {
+	display:-webkit-box;
+	display:-ms-flexbox;
+	display:flex;
+	cursor: pointer;
+}
+.moderni_form_close:after {
+	font-size:40px !important;
+	display:block;
+	content: "\00d7";
+	position:absolute;
+	color: #fff;
+	top: 0px;
+	right:5px;
+	text-shadow: -1px 0 black, 0 2px black, 2px 0 black, 0 -1px black;
+}
+
+#moderni_form_mobileimage_button {
+	display:block;
+}
+
+.moderni_form_mobileimage_container {
+	position:relative;
+	width:150px;
+	height:150px;
+}
+
+.moderni_form_gallery_list li {
+	display:inline;
+	float:left;
+
+	margin:6px;
+}
+.moderni_form_gallery_container {
+	position:relative;
+	width:150px;
+	height:150px;
+}
+.shift8_gallery_button_container {
+	clear:left;
+}
+
+.moderni_form_gallery_close:after {
+	font-size:40px !important;
+	display:block;
+	content: "\00d7";
+	position:absolute;
+	color: #fff;
+	top: 0px;
+	right:5px;
+	text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}
+
+#moderni_form_gallery_button {
+	display:block;
+}

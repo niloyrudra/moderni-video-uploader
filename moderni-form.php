@@ -44,6 +44,7 @@ define( 'MODERNI_FORM_CT_SLUG', 'property-types' );
 define( 'MODERNI_FORM_PLUGIN_DIR_URL', plugin_dir_url( __FILE__ ) );
 define( 'MODERNI_FORM_PLUGIN_DIR_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MODERNI_FORM_PLUGIN_URL', plugins_url( __FILE__ ) );
+define( 'MODERNI_FORM_PLUGIN_DIRNAME', dirname( __FILE__ ) );
 
 /**
  * The code that runs during plugin activation.
@@ -88,3 +89,50 @@ function run_moderni_form() {
 
 }
 run_moderni_form();
+
+
+
+// Initialize the plugin.
+add_action( 'plugins_loaded', 'init' );
+function init() {
+	// Check if Elementor installed and activated.
+	if ( ! did_action( 'elementor/loaded' ) ) {
+		add_action( 'admin_notices', 'admin_notice_missing_main_plugin' );
+		return;
+	}
+
+	// require_once plugin_dir_path( __FILE__ ) . "/includes/class-moderni-form-elementor-project-form-widget.php";
+	// $project_submit_form_widget = new MVF_Elementor_Project_Form_Widget();
+
+
+	// Check for required Elementor version.
+	// if ( ! version_compare( ELEMENTOR_VERSION, self::MINIMUM_ELEMENTOR_VERSION, '>=' ) ) {
+	// 	add_action( 'admin_notices', 'admin_notice_minimum_elementor_version' );
+	// 	return;
+	// }
+	// Check for required PHP version.
+	// if ( version_compare( PHP_VERSION, self::MINIMUM_PHP_VERSION, '<' ) ) {
+	// 	add_action( 'admin_notices', 'admin_notice_minimum_php_version' );
+	// 	return;
+	// }
+
+	// Once we get here, We have passed all validation checks so we can safely include our widgets.
+	// require_once 'class-widgets.php';
+}
+function admin_notice_missing_main_plugin() {
+	deactivate_plugins( plugin_basename( __FILE__ ) );
+	return sprintf(
+		wp_kses(
+			'<div class="notice notice-warning is-dismissible"><p><strong>"%1$s"</strong> requires <strong>"%2$s"</strong> to be installed and activated.</p></div>',
+			array(
+				'div' => array(
+					'class'  => array(),
+					'p'      => array(),
+					'strong' => array(),
+				),
+			)
+		),
+		'Moderni Video Uploader Form',
+		'Elementor'
+	);
+}

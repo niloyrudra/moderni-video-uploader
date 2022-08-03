@@ -1,4 +1,19 @@
 <?php
+if ( ! defined( 'WPINC' ) ) exit;
+
+// Register admin scripts for custom fields
+function morderni_form_load_wp_admin_style() {
+    wp_enqueue_media();
+    wp_enqueue_script('jquery-ui-datepicker');
+    wp_enqueue_script('media-upload');
+    wp_enqueue_script('thickbox');
+    wp_enqueue_style('thickbox');
+    // admin always last
+    wp_enqueue_style( 'morderni_form_admin_css', MODERNI_FORM_PLUGIN_DIR_URL . 'admin/css/morderni_form_admin.css' );
+    wp_enqueue_script( 'morderni_form_admin_script', MODERNI_FORM_PLUGIN_DIR_URL . 'admin/js/morderni_form_admin.js' );
+}
+add_action( 'admin_enqueue_scripts', 'morderni_form_load_wp_admin_style' );
+
 
 function user_can_save( $post_id, $plugin_file, $nonce ) {
 
@@ -15,120 +30,105 @@ function has_files_to_upload( $id ) {
     return ( ! empty( $_FILES ) ) && isset( $_FILES[ $id ] );
 }
 
+function get_custom_post_type_template( $template ) {
+    global $post;
+    // $plugin_root_dir = WP_PLUGIN_DIR.'/moderni-form/';
+    // if ( is_archive() || is_post_type_archive ( MODERNI_FORM_CPT_NAME ) ) {
+    // if( get_post_type($post) == MODERNI_FORM_CPT_NAME ) {
+    if( is_object( $post ) && $post->post_type === MODERNI_FORM_CPT_NAME ) {
+         $template = MODERNI_FORM_PLUGIN_DIRNAME . '/template-parts/' . MODERNI_FORM_CPT_NAME . '-template.php';
+    }
+    return $template;
+}
 
-// add_action( "init", "mvf_ajax_calls" );
-
-// function mvf_ajax_calls() {
-//     add_action( "wp_ajax_nopriv_mvf_project_uploader", "mvf_project_uploader" );
-//     add_action( "wp_ajax_mvf_project_uploader", "mvf_project_uploader" );
-
-//     add_action( "wp_ajax_nopriv_mvf_project_Video_uploader", "mvf_project_Video_uploader" );
-//     add_action( "wp_ajax_mvf_project_Video_uploader", "mvf_project_Video_uploader" );
-// }
-
-// function mvf_project_uploader() {
-//     $title = $_POST['mvf_title'] ?: '';
-//     $type = $_POST['mvf_type'] ?: '';
-//     $street = $_POST['mvf_street'] ?: '';
-//     $street2 = $_POST['mvf_street2'] ?: '';
-//     $city = $_POST['mvf_city'] ?: '';
-//     $state = $_POST['mvf_state'] ?: '';
-//     $zip_code = $_POST['mvf_zip_code'] ?: '';
-
-//     $args = array(
-//       'post_type'       => MODERNI_FORM_CPT_NAME,
-//       'post_title'      => wp_strip_all_tags( $title ),
-//       'post_content'    => '',
-//       'post_status'     => 'publish',
-//       'post_author'     => get_current_user_id(),
-//       'meta_input'      => array(
-//           '_mvf_property_detail' => array(
-//               'street'		    => wp_strip_all_tags( $street ),
-//               'street2'		    => wp_strip_all_tags( $street2 ),
-//               'city'			=> wp_strip_all_tags( $city ),
-//               'state'			=> wp_strip_all_tags( $state ),
-//               'zip_code'		=> wp_strip_all_tags( $zip_code ),
-//           ),
-//       ),
-//     );
-
-//     $project_id = wp_insert_post( $args );
-
-//     if( ! is_wp_error( $project_id ) ) {
-
-//         if( $type ) {
-//             $type = esc_html( $type );
-//             $type_slug = str_replace( ' ', '-', strtolower( $type ) );
-//             $project_type = term_exists( $type, MODERNI_FORM_CT_NAME );
-//             if ( ! $project_type ) {
-//                 $project_type = wp_insert_term( $type, MODERNI_FORM_CT_NAME, array( 'slug' => $type_slug ) );
-//             }                     
-//             // It works fine, does not create a new term, and simply attaches the existing ID
-//             wp_set_post_terms( $project_id, array( (int) $project_type['term_id'] ), MODERNI_FORM_CT_NAME, false );
-//         }
-//         // wp_send_json_success( array( 'project_id'   =>  $project_id ), 200 );
-//         echo $project_id;
-//         die();
-//     }
-//     echo 0;
-//     die();
-// }
-
-// function mvf_project_Video_uploader() {
+// add_filter( 'archive_template', 'get_custom_post_type_template' ) ;
+// add_filter( 'single_template', 'get_custom_post_type_template' ) ;
+// add_filter( 'singular_template', 'get_custom_post_type_template' ) ;
+// add_filter( 'template_include', 'get_custom_post_type_template' ) ;
 
 
-//     $project_id = $_POST['project_id'] ?: round(microtime(true));
 
-//     if (!function_exists('wp_handle_upload')) {
-//         require_once(ABSPATH . 'wp-admin/includes/file.php');
-//     }
-//     // echo $_FILES["upload"]["name"];
-//     $uploadedfile = $_FILES['file'];
-//     $upload_overrides = array('test_form' => false);
-//     $movefile = wp_handle_upload($uploadedfile, $upload_overrides);
+/**
+ * ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ */
 
-//     // echo $movefile['url'];
-//     if ($movefile && !isset($movefile['error'])) {
-//         $video_url = $movefile["url"];
-//         $upload_dir = wp_upload_dir();
-//         $video_data = file_get_contents($video_url);
-//         $filename = basename($video_url);
-//         if(wp_mkdir_p($upload_dir['path']))
-//             $file = $upload_dir['path'] . '/' . $filename;
-//         else
-//             $file = $upload_dir['basedir'] . '/' . $filename;
-//         file_put_contents($file, $video_data);
+function moderni_form_frontend($content){
+    global $post;
+    // return '>> -- >> ' . $post->ID;
+    if( post_password_required() ) return $content;
+    if( get_post_type() != MODERNI_FORM_CPT_NAME || !is_main_query() ) return $content;
+    return $content.do_shortcode("[moderni-form-project-view id={$post->ID}]");
+}
+add_filter( 'the_content', 'moderni_form_frontend');
+/**
+ * ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ */
 
-//         $wp_filetype = wp_check_filetype($filename, null );
-//         $attachment = array(
-//             'post_mime_type' => $wp_filetype['type'],
-//             'post_title' => sanitize_file_name($filename),
-//             'post_content' => '',
-//             'post_status' => 'inherit'
-//         );
-//         if( $project_id ) {
+// add_filter( "theme_post_templates", "moderni_custom_template" );
+// add_filter( "theme_page_templates", "moderni_custom_template" );
+function moderni_custom_template( $templates ) {
+    $template_path = MODERNI_FORM_PLUGIN_DIRNAME . '/template-parts/' . MODERNI_FORM_CPT_NAME . '-template.php';
 
-//             $attach_id = wp_insert_attachment( $attachment, $file, $project_id);
-            
-//             if( $attach_id &&  ! is_wp_error( $attach_id ) ) {
+    $templates = array_merge( $templates, array( $template_path     => __( "Project Archive Template" ) ));
+    return $templates;
+}
 
-//                 $attach_data = wp_generate_attachment_metadata( $attach_id, $file );
-//                 wp_update_attachment_metadata( $attach_id, $attach_data );
 
-//                 update_post_meta( $project_id, '_mvf_project_vid_url',  esc_url( get_the_permalink( $attach_id ) ) );
-//                 // $vid_url_data = array( "vid_url" => esc_url( get_the_permalink( $attach_id ) ) );
-//                 // update_post_meta( $project_id, '_mvf_property_detail', $vid_url_data  );
+//Add our custom template to the admin's templates dropdown
+add_filter( 'theme_page_templates', 'pluginname_template_as_option', 10, 3 );
+add_filter( 'theme_post_templates', 'pluginname_template_as_option', 10, 3 );
+add_filter( 'theme_' . MODERNI_FORM_CPT_NAME . '_templates', 'pluginname_template_as_option', 10, 3 );
+function pluginname_template_as_option( $templates, $theme, $post ){
 
-//             }
-//             // wp_send_json_success( array( 'vid_id'   =>  $attach_id ), 200 );
-//             echo $attach_id;
-//         }
-//     } else {
-//         /**
-//          * Error generated by _wp_handle_upload()
-//         * @see _wp_handle_upload() in wp-admin/includes/file.php
-//         */
-//         echo $movefile['error'];
-//     }
-//     die();
-// }
+    $templates['template-parts/' . MODERNI_FORM_CPT_NAME . '-template.php'] = __( "Project Archive Template" );
+
+    return $templates;
+
+}
+
+//When our custom template has been chosen then display it for the page
+add_filter( 'template_include', 'pluginname_load_template', 99 );
+function pluginname_load_template( $template ) {
+
+    global $post;
+    $custom_template_slug   = 'template-parts/' . MODERNI_FORM_CPT_NAME . '-template.php';
+    $page_template_slug     = get_page_template_slug( $post->ID );
+
+    if( $page_template_slug == $custom_template_slug ){
+        // return plugin_dir_path( __FILE__ ) . $custom_template_slug;
+        $file_template = MODERNI_FORM_PLUGIN_DIRNAME . '/template-parts/' . MODERNI_FORM_CPT_NAME . '-template.php';
+        if( file_exists( $file_template ) ) return $file_template;
+        else return $template;
+    }
+
+    return $template;
+
+}
+
+function moderni_form_project_insertion_notification( $project_id, $attachment_id ) {
+	
+	$option_subject = @get_option('moderni_form_mail_subject') ? get_option('moderni_form_mail_subject') : __('New project') . '[#' . $project_id . ']' . __(' has been inserted!');
+	$option_body = @get_option('moderni_form_mail_body') ? get_option('moderni_form_mail_body') : __('New Project ID') . ' ' . $project_id . __(' and its video attachment ID is') . ' ' . $attachment_id . '.';
+	
+    $option_from = get_option( 'admin_email' );
+	$site_name = get_bloginfo("name");
+	
+	/* ************************* */
+	$to = $option_from;
+	
+	$subject = str_replace( '{project_id}', $project_id, $option_subject);
+	$subject = str_replace( '{attachment_id}', $attachment_id, $subject);
+	
+	
+	$body = str_replace( '{project_id}', $project_id, $option_body);
+	$body = str_replace( '{attachment_id}', $attachment_id, $body);
+	
+	$headers = array(
+		'Content-Type: text/html; charset=UTF-8',
+		'From: ' . $site_name . ' <' . $option_from . '>',
+		'Reply-To: ' . $site_name . ' <' . $option_from . '>',
+	);
+
+	wp_mail( $to, $subject, $body, $headers );
+	
+}
