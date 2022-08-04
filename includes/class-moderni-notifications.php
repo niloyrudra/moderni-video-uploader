@@ -82,7 +82,7 @@ class Moderni_Form_Notifications {
     
 		$subject = $option_subject;
 		$body = $option_body;
-		$attachments = count( get_project_gallery_attachments( $project_id ) ) > 0 ? get_project_gallery_attachments( $project_id ) : array();
+		$attachments = count( Moderni_Form_Notifications::get_project_gallery_attachments( $project_id ) ) > 0 ? Moderni_Form_Notifications::get_project_gallery_attachments( $project_id ) : array();
 		
         wp_mail( $to, $subject, $body, $headers, $attachments );
         
